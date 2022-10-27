@@ -193,3 +193,8 @@ service vendor.nv_mac /vendor/bin/nv_mac
     user system
     group system inet net_admin wifi net_raw
     oneshot
+
+on property:vendor.post_boot.parsed=1
+
+# Enable suspend to RAM
+    write /sys/power/mem_sleep "deep"
