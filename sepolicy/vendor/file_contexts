@@ -73,12 +73,6 @@
 # Dc Dimming
 /sys/devices/platform/soc/ae00000\.qcom,mdss_mdp/drm/card0/card0-DSI-1/disp_param u:object_r:sysfs_dm:s0
 
-# Data files
-/data/vendor/dolby(/.*)?   u:object_r:vendor_data_file:s0
-
-# Dolby
-/(vendor|system/vendor)/bin/hw/vendor\.dolby\.hardware\.dms@2\.0-service                                        u:object_r:hal_dms_default_exec:s0
-
 # UFS discard_max_bytes
 /sys/devices/platform/soc/1d84000.ufshc/host0/target0:0:0/0:0:0:0/block/sda/queue/discard_max_bytes u:object_r:vendor_sysfs_mmc_host:s0
 
