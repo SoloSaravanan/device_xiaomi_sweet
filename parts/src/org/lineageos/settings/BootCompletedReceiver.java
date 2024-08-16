@@ -26,7 +26,6 @@ import android.util.Log;
 import androidx.preference.PreferenceManager;
 
 import org.lineageos.settings.dirac.DiracUtils;
-import org.lineageos.settings.dolby.DolbyUtils;
 import org.lineageos.settings.doze.DozeUtils;
 import org.lineageos.settings.haptic.HapticUtils;
 import org.lineageos.settings.thermal.ThermalUtils;
@@ -48,10 +47,9 @@ public class BootCompletedReceiver extends BroadcastReceiver {
         }
         if (DEBUG) Log.d(TAG, "Received boot completed intent");
         try {
-//            DiracUtils.getInstance(context);
-        DolbyUtils.getInstance(context).onBootCompleted();
+            DiracUtils.getInstance(context);
         } catch (Exception e) {
-            Log.d(TAG, "Dolby is not present in system");
+            Log.d(TAG, "Dirac is not present in system");
         }
         DozeUtils.checkDozeService(context);
         HapticUtils.restoreLevel(context);
