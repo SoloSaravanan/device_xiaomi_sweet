@@ -16,8 +16,6 @@
 
 package org.lineageos.settings.dolby;
 
-import static org.lineageos.settings.dolby.DolbyAtmos.DsParam;
-
 import android.content.Context;
 import android.util.Log;
 
@@ -29,19 +27,16 @@ import java.util.List;
 public final class DolbyUtils {
 
     private static final String TAG = "DolbyUtils";
+    private static final String DEFAULT_PRESET = "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0";
     private static final int EFFECT_PRIORITY = 100;
 
     private static DolbyUtils mInstance;
     private DolbyAtmos mDolbyAtmos;
     private Context mContext;
 
-    public DolbyUtils(Context context) {
+    private DolbyUtils(Context context) {
         mContext = context;
         mDolbyAtmos = new DolbyAtmos(EFFECT_PRIORITY, 0);
-        mDolbyAtmos.setEnabled(mDolbyAtmos.getDsOn());
-
-        // Always disable volume leveler because its broken on AOSP.
-        disableVolumeLeveler();
     }
 
     public static synchronized DolbyUtils getInstance(Context context) {
@@ -49,6 +44,12 @@ public final class DolbyUtils {
             mInstance = new DolbyUtils(context);
         }
         return mInstance;
+    }
+
+    public void onBootCompleted() {
+        Log.i(TAG, "onBootCompleted");
+        mDolbyAtmos.setEnabled(mDolbyAtmos.getDsOn());
+        mDolbyAtmos.setVolumeLevelerEnabled(false);
     }
 
     private void checkEffect() {
@@ -61,26 +62,25 @@ public final class DolbyUtils {
 
     public void setDsOn(boolean on) {
         checkEffect();
-        Log.d(TAG, "setDsOn: " + on);
+        Log.i(TAG, "setDsOn: " + on);
         mDolbyAtmos.setDsOn(on);
     }
 
     public boolean getDsOn() {
         boolean on = mDolbyAtmos.getDsOn();
-        Log.d(TAG, "getDsOn: " + on);
+        Log.i(TAG, "getDsOn: " + on);
         return on;
     }
 
     public void setProfile(int index) {
         checkEffect();
-        Log.d(TAG, "setProfile: " + index);
+        Log.i(TAG, "setProfile: " + index);
         mDolbyAtmos.setProfile(index);
-        disableVolumeLeveler();
     }
 
     public int getProfile() {
         int profile = mDolbyAtmos.getProfile();
-        Log.d(TAG, "getProfile: " + profile);
+        Log.i(TAG, "getProfile: " + profile);
         return profile;
     }
 
@@ -89,73 +89,35 @@ public final class DolbyUtils {
         List<String> profiles = Arrays.asList(mContext.getResources().getStringArray(
                 R.array.dolby_profile_values));
         int profileIndex = profiles.indexOf(profile);
-        Log.d(TAG, "getProfileName: profile=" + profile + " index=" + profileIndex);
+        Log.i(TAG, "getProfileAsString: profile=" + profile + " index=" + profileIndex);
         return profileIndex == -1 ? null : mContext.getResources().getStringArray(
                 R.array.dolby_profile_entries)[profileIndex];
-    }
-
-    public void resetProfileSpecificSettings() {
-        checkEffect();
-        mDolbyAtmos.resetProfileSpecificSettings();
-        disableVolumeLeveler();
-    }
-
-    private void disableVolumeLeveler() {
-        Log.d(TAG, "disableVolumeLeveler");
-        mDolbyAtmos.setDapParameterBool(DsParam.VOLUME_LEVELER, false);
     }
 
     public void setPreset(String preset) {
         checkEffect();
         int[] gains = Arrays.stream(preset.split(",")).mapToInt(Integer::parseInt).toArray();
-        Log.d(TAG, "setPreset: " + Arrays.toString(gains));
-        mDolbyAtmos.setDapParameter(DsParam.GEQ, gains);
-    }
-
-    public String getPreset() {
-        int[] gains = mDolbyAtmos.getDapParameter(DsParam.GEQ);
-        Log.d(TAG, "getPreset: " + Arrays.toString(gains));
-        String[] preset = Arrays.stream(gains).mapToObj(String::valueOf).toArray(String[]::new);
-        return String.join(",", preset);
+        Log.i(TAG, "setPreset: " + Arrays.toString(gains));
+        mDolbyAtmos.setGeqBandGains(gains);
     }
 
     public void setBassEnhancerEnabled(boolean enable) {
         checkEffect();
-        Log.d(TAG, "setBassEnhancerEnabled: " + enable);
-        mDolbyAtmos.setDapParameterBool(DsParam.BASS_ENHANCER, enable);
-    }
-
-    public boolean getBassEnhancerEnabled() {
-        boolean enabled = mDolbyAtmos.getDapParameterBool(DsParam.BASS_ENHANCER);
-        Log.d(TAG, "getBassEnhancerEnabled: " + enabled);
-        return enabled;
+        Log.i(TAG, "setBassEnhancerEnabled: " + enable);
+        mDolbyAtmos.setBassEnhancerEnabled(enable);
     }
 
     public void setDialogueEnhancerAmount(int amount) {
         checkEffect();
-        Log.d(TAG, "setDialogueEnhancerAmount: " + amount);
-        mDolbyAtmos.setDapParameterBool(DsParam.DIALOGUE_ENHANCER_ENABLE, amount > 0);
-        mDolbyAtmos.setDapParameterInt(DsParam.DIALOGUE_ENHANCER_AMOUNT, amount);
-    }
-
-    public int getDialogueEnhancerAmount() {
-        boolean enabled = mDolbyAtmos.getDapParameterBool(DsParam.DIALOGUE_ENHANCER_ENABLE);
-        int amount = enabled ? mDolbyAtmos.getDapParameterInt(DsParam.DIALOGUE_ENHANCER_AMOUNT) : 0;
-        Log.d(TAG, "getDialogueEnhancerAmount: enabled=" + enabled + " amount=" + amount);
-        return amount;
+        Log.i(TAG, "setDialogueEnhancerAmount: " + amount);
+        mDolbyAtmos.setDialogueEnhancerEnabled(true);
+        mDolbyAtmos.setDialogueEnhancerAmount(amount);
     }
 
     public void setStereoWideningAmount(int amount) {
         checkEffect();
-        Log.d(TAG, "setStereoWideningAmount: " + amount);
-        mDolbyAtmos.setDapParameterBool(DsParam.HEADPHONE_VIRTUALIZER, amount > 0);
-        mDolbyAtmos.setDapParameterInt(DsParam.STEREO_WIDENING, amount);
-    }
-
-    public int getStereoWideningAmount() {
-        boolean enabled = mDolbyAtmos.getDapParameterBool(DsParam.HEADPHONE_VIRTUALIZER);
-        int amount = enabled ? mDolbyAtmos.getDapParameterInt(DsParam.STEREO_WIDENING) : 0;
-        Log.d(TAG, "getStereoWideningAmount: enabled=" + enabled + " amount=" + amount);
-        return amount;
+        Log.i(TAG, "setStereoWideningAmount: " + amount);
+        mDolbyAtmos.setHeadphoneVirtualizerEnabled(true);
+        mDolbyAtmos.setStereoWideningAmount(amount);
     }
 }
