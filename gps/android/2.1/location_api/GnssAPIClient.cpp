@@ -27,7 +27,7 @@
  *
  */
 
-#define LOG_NDEBUG 0
+#define LOG_NDEBUG 1
 #define LOG_TAG "LocSvc_GnssAPIClient"
 #define SINGLE_SHOT_MIN_TRACKING_INTERVAL_MSEC (590 * 60 * 60 * 1000) // 590 hours
 

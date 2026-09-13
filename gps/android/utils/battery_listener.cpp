@@ -31,7 +31,7 @@
 #undef LOG_TAG
 #endif
 #define LOG_TAG "LocSvc_BatteryListener"
-#define LOG_NDEBUG 0
+#define LOG_NDEBUG 1
 
 #include <android/hidl/manager/1.0/IServiceManager.h>
 #include <android/hardware/health/2.1/IHealth.h>

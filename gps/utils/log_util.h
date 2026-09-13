@@ -169,7 +169,7 @@ extern void log_buffer_insert(char *str, unsigned long buf_size, int level);
  *
  *============================================================================*/
 #ifndef LOG_NDEBUG
-#define LOG_NDEBUG 0
+#define LOG_NDEBUG 1
 #endif
 #define TOTAL_LOG_LEVELS 5
 #define LOGGING_BUFFER_MAX_LEN 1024
