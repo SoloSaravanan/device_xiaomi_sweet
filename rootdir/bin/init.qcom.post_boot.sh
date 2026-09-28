@@ -30,6 +30,7 @@
 target=`getprop ro.board.platform`
 
 function configure_memory_parameters() {
+    [ -d /sys/module/lowmemorykiller/parameters ] || return 0
     # Set Memory parameters.
     #
     # Set per_process_reclaim tuning parameters
@@ -58,6 +59,7 @@ function configure_memory_parameters() {
     set_almk_ppr_adj=$(((set_almk_ppr_adj * 6) + 6))
     echo $set_almk_ppr_adj > /sys/module/lowmemorykiller/parameters/adj_max_shift
 
+    echo "18432,23040,27648,64512,165888,225792" > /sys/module/lowmemorykiller/parameters/minfree
     # Calculate vmpressure_file_min as below & set for 64 bit:
     # vmpressure_file_min = last_lmk_bin + (last_lmk_bin - last_but_one_lmk_bin)
     minfree_series=`cat /sys/module/lowmemorykiller/parameters/minfree`
@@ -69,8 +71,6 @@ function configure_memory_parameters() {
 
     vmpres_file_min=$((minfree_5 + (minfree_5 - rem_minfree_4)))
     echo $vmpres_file_min > /sys/module/lowmemorykiller/parameters/vmpressure_file_min
-
-    echo "18432,23040,27648,64512,165888,225792" > /sys/module/lowmemorykiller/parameters/minfree
 
     # Enable adaptive LMK for all targets &
     # use Google default LMK series for all 64-bit targets >=2GB.
@@ -212,7 +212,7 @@ case "$soc_id" in
 
     # Configure default schedTune value for foreground/top-app
     echo 1 > /dev/stune/foreground/schedtune.prefer_idle
-    echo 10 > /dev/stune/top-app/schedtune.boost
+    echo 5 > /dev/stune/top-app/schedtune.boost
     echo 1 > /dev/stune/top-app/schedtune.prefer_idle
 
     # Set Memory parameters
@@ -277,7 +277,7 @@ case "$soc_id" in
         done
 
         # Gold L3 ratio ceil
-        echo 4000 > /sys/class/devfreq/soc:qcom,cpu6-cpu-l3-lat/mem_latency/ratio_ceil
+        echo 1000 > /sys/class/devfreq/soc:qcom,cpu6-cpu-l3-lat/mem_latency/ratio_ceil
 
         # Enable cdspl3 governor for L3 cdsp nodes
         for l3cdsp in $device/*cdsp-cdsp-l3-lat/devfreq/*cdsp-cdsp-l3-lat
