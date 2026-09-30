@@ -684,4 +684,7 @@
 
     <!-- Screen off delay -->
     <integer name="config_screen_off_delay">0</integer>
+
+    <!-- Whether display white balance is supported by the device. -->
+    <bool name="config_displayWhiteBalanceAvailable">false</bool>
 </resources>
