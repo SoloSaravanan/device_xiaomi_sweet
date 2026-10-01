@@ -86,4 +86,15 @@ public class PickupSensor implements SensorEventListener {
             Log.d(TAG, "Disabling");
         submit(() -> { mSensorManager.unregisterListener(this, mSensor); });
     }
+
+    protected void close() {
+        if (!mExecutorService.isShutdown()) {
+            submit(() -> {
+                if (mSensorManager != null) {
+                    mSensorManager.unregisterListener(this);
+                }
+            });
+            mExecutorService.shutdown();
+        }
+    }
 }

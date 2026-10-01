@@ -77,4 +77,15 @@ public class AodSensor implements SensorEventListener {
         }
         submit(() -> { mSensorManager.unregisterListener(this, mSensor); });
     }
+
+    protected void close() {
+        if (!mExecutorService.isShutdown()) {
+            submit(() -> {
+                if (mSensorManager != null) {
+                    mSensorManager.unregisterListener(this);
+                }
+            });
+            mExecutorService.shutdown();
+        }
+    }
 }

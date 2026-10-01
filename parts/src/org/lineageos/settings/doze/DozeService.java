@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.util.Log;
 
 public class DozeService extends Service {
@@ -45,6 +46,15 @@ public class DozeService extends Service {
         screenStateFilter.addAction(Intent.ACTION_SCREEN_ON);
         screenStateFilter.addAction(Intent.ACTION_SCREEN_OFF);
         registerReceiver(mScreenStateReceiver, screenStateFilter);
+
+        PowerManager powerManager = getSystemService(PowerManager.class);
+        if (powerManager != null) {
+            if (powerManager.isInteractive()) {
+                onDisplayOn();
+            } else {
+                onDisplayOff();
+            }
+        }
     }
 
     @Override
@@ -58,10 +68,11 @@ public class DozeService extends Service {
     public void onDestroy() {
         if (DEBUG)
             Log.d(TAG, "Destroying service");
-        super.onDestroy();
         this.unregisterReceiver(mScreenStateReceiver);
-        mProximitySensor.disable();
-        mPickupSensor.disable();
+        mAodSensor.close();
+        mProximitySensor.close();
+        mPickupSensor.close();
+        super.onDestroy();
     }
 
     @Override
