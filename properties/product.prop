@@ -1,2 +1,1 @@
-# eBPF
-ro.bpf.kver_override=5.10.239
+# Kernel version is derived from the running kernel's uname release.

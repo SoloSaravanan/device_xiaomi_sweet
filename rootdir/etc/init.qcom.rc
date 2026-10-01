@@ -192,10 +192,6 @@ on post-fs-data
     # Create /data/vendor/time folder for time-services
     mkdir /data/vendor/time 0700 system system
 
-    # Create FM dir for patchdownloader
-    mkdir /data/vendor/fm 0770 system system
-    chmod 0770 /data/vendor/fm
-
     # Mark the copy complete flag to not completed
     write /data/vendor/radio/copy_complete 0
     chown radio radio /data/vendor/radio/copy_complete
