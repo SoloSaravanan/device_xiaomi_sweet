@@ -29,24 +29,5 @@ PRODUCT_BUILD_PROP_OVERRIDES += \
     BuildDesc="sweet_global-user 13 TKQ1.221013.002 V14.0.9.0.TKFMIXM release-keys" \
     BuildFingerprint=Redmi/sweet_global/sweet:13/TKQ1.221013.002/V14.0.9.0.TKFMIXM:user/release-keys
 
-# Remove optional packages after all product makefiles are inherited.
-PRODUCT_PACKAGES -= \
-    PhotoTable \
-    LocalContactsBackup \
-    QuickAccessWallet \
-    LMOFreeform \
-    LMOFreeformSidebar \
-    BasicDreams \
-    BluetoothMidiService \
-    Stk \
-    WallpaperBackup \
-    CallLogBackup \
-    CellBroadcastLegacyApp \
-    DeviceDiagnostics \
-    LiveWallpapersPicker \
-    Tag \
-    BtHelper \
-    BtHelperAdapter \
-    EmergencyInfo \
-    Updater \
-    AccessibilityMenu
+# Device-local build-only package override provider removes optional inherited apps.
+PRODUCT_PACKAGES += SweetDebloatOverrides
