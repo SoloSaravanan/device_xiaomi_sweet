@@ -28,3 +28,6 @@ PRODUCT_DEX_PREOPT_MODULE_CONFIGS += qti-telephony-common=disable
 PRODUCT_BUILD_PROP_OVERRIDES += \
     BuildDesc="sweet_global-user 13 TKQ1.221013.002 V14.0.9.0.TKFMIXM release-keys" \
     BuildFingerprint=Redmi/sweet_global/sweet:13/TKQ1.221013.002/V14.0.9.0.TKFMIXM:user/release-keys
+
+# Device-local build-only package override provider removes optional inherited apps.
+PRODUCT_PACKAGES += SweetDebloatOverrides
