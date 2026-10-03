@@ -42,13 +42,15 @@ public class ProximitySensor implements SensorEventListener {
     private Context mContext;
     private ExecutorService mExecutorService;
 
+    private boolean mActive = false;
     private boolean mSawNear = false;
     private long mInPocketTime = 0;
 
     public ProximitySensor(Context context) {
         mContext = context;
         mSensorManager = mContext.getSystemService(SensorManager.class);
-        mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY, false);
+        mSensor = mSensorManager != null
+                ? mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY, false) : null;
         mExecutorService = Executors.newSingleThreadExecutor();
     }
 
@@ -56,15 +58,23 @@ public class ProximitySensor implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        boolean isNear = event.values[0] < mSensor.getMaximumRange();
-        if (mSawNear && !isNear) {
-            if (shouldPulse(event.timestamp)) {
+        synchronized (this) {
+            if (!mActive || mSensor == null) {
+                return;
+            }
+
+            if (DEBUG)
+                Log.d(TAG, "Got sensor event: " + event.values[0]);
+
+            boolean isNear = event.values[0] < mSensor.getMaximumRange();
+            if (!mSawNear && isNear) {
+                // Keep the start of the near interval; later samples must not reset it.
+                mInPocketTime = event.timestamp;
+            } else if (mSawNear && !isNear && shouldPulse(event.timestamp)) {
                 DozeUtils.wakeOrLaunchDozePulse(mContext);
             }
-        } else {
-            mInPocketTime = event.timestamp;
+            mSawNear = isNear;
         }
-        mSawNear = isNear;
     }
 
     private boolean shouldPulse(long timestamp) {
@@ -86,25 +96,68 @@ public class ProximitySensor implements SensorEventListener {
         /* Empty */
     }
 
+    private void resetState() {
+        mSawNear = false;
+        mInPocketTime = 0;
+    }
+
     protected void enable() {
         if (DEBUG)
             Log.d(TAG, "Enabling");
         submit(() -> {
-            mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_NORMAL);
+            if (mSensorManager == null || mSensor == null) {
+                synchronized (this) {
+                    mActive = false;
+                    resetState();
+                }
+                return;
+            }
+
+            synchronized (this) {
+                resetState();
+                mActive = true;
+            }
+            if (!mSensorManager.registerListener(
+                    this, mSensor, SensorManager.SENSOR_DELAY_NORMAL)) {
+                synchronized (this) {
+                    mActive = false;
+                    resetState();
+                }
+            }
         });
     }
 
     protected void disable() {
         if (DEBUG)
             Log.d(TAG, "Disabling");
-        submit(() -> { mSensorManager.unregisterListener(this, mSensor); });
+        synchronized (this) {
+            mActive = false;
+            resetState();
+        }
+        submit(() -> {
+            if (mSensorManager != null) {
+                mSensorManager.unregisterListener(this);
+            }
+            synchronized (this) {
+                mActive = false;
+                resetState();
+            }
+        });
     }
 
     protected void close() {
         if (!mExecutorService.isShutdown()) {
+            synchronized (this) {
+                mActive = false;
+                resetState();
+            }
             submit(() -> {
                 if (mSensorManager != null) {
                     mSensorManager.unregisterListener(this);
+                }
+                synchronized (this) {
+                    mActive = false;
+                    resetState();
                 }
             });
             mExecutorService.shutdown();

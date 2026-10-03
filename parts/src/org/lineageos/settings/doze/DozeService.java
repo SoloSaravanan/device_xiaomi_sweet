@@ -46,21 +46,13 @@ public class DozeService extends Service {
         screenStateFilter.addAction(Intent.ACTION_SCREEN_ON);
         screenStateFilter.addAction(Intent.ACTION_SCREEN_OFF);
         registerReceiver(mScreenStateReceiver, screenStateFilter);
-
-        PowerManager powerManager = getSystemService(PowerManager.class);
-        if (powerManager != null) {
-            if (powerManager.isInteractive()) {
-                onDisplayOn();
-            } else {
-                onDisplayOff();
-            }
-        }
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (DEBUG)
             Log.d(TAG, "Starting service");
+        updateSensorState();
         return START_STICKY;
     }
 
@@ -80,18 +72,21 @@ public class DozeService extends Service {
         return null;
     }
 
+    private void updateSensorState() {
+        PowerManager powerManager = getSystemService(PowerManager.class);
+        if (powerManager == null || powerManager.isInteractive()) {
+            onDisplayOn();
+        } else {
+            onDisplayOff();
+        }
+    }
+
     private void onDisplayOn() {
         if (DEBUG)
             Log.d(TAG, "Display on");
-        if (DozeUtils.isPickUpEnabled(this)) {
-            mPickupSensor.disable();
-        }
-        if (DozeUtils.isHandwaveGestureEnabled(this) || DozeUtils.isPocketGestureEnabled(this)) {
-            mProximitySensor.disable();
-        }
-        if (DozeUtils.isDozeAutoBrightnessEnabled(this)) {
-            mAodSensor.disable();
-        }
+        mPickupSensor.disable();
+        mProximitySensor.disable();
+        mAodSensor.disable();
     }
 
     private void onDisplayOff() {
@@ -99,12 +94,18 @@ public class DozeService extends Service {
             Log.d(TAG, "Display off");
         if (DozeUtils.isPickUpEnabled(this)) {
             mPickupSensor.enable();
+        } else {
+            mPickupSensor.disable();
         }
         if (DozeUtils.isHandwaveGestureEnabled(this) || DozeUtils.isPocketGestureEnabled(this)) {
             mProximitySensor.enable();
+        } else {
+            mProximitySensor.disable();
         }
         if (DozeUtils.isDozeAutoBrightnessEnabled(this)) {
             mAodSensor.enable();
+        } else {
+            mAodSensor.disable();
         }
     }
 
