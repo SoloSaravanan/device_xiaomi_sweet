@@ -38,6 +38,9 @@
 #include <android/hardware/health/2.1/IHealthInfoCallback.h>
 #include <healthhalutils/HealthHalUtils.h>
 #include <hidl/HidlTransportSupport.h>
+#include <condition_variable>
+#include <memory>
+#include <mutex>
 #include <thread>
 #include <log_util.h>
 
@@ -52,7 +55,9 @@ using android::hardware::health::V2_0::Result;
 using android::hidl::manager::V1_0::IServiceManager;
 using namespace std::literals::chrono_literals;
 
+static std::mutex sBatteryListenerMutex;
 static bool sIsBatteryListened = false;
+static unsigned int sBatteryListenerGeneration = 0;
 namespace android {
 
 #define GET_HEALTH_SVC_RETRY_CNT 5
@@ -76,12 +81,12 @@ struct BatteryListenerImpl : public hardware::health::V2_1::IHealthInfoCallback,
   private:
     sp<hardware::health::V2_1::IHealth> mHealth;
     status_t init();
-    BatteryStatus mStatus;
+    BatteryStatus mStatus = BatteryStatus::UNKNOWN;
     cb_fn_t mCb;
     std::mutex mLock;
     std::condition_variable mCond;
     std::unique_ptr<std::thread> mThread;
-    bool mDone;
+    bool mDone = false;
     bool statusToBool(const BatteryStatus &s) const {
         return (s == BatteryStatus::CHARGING) ||
                (s ==  BatteryStatus::FULL);
@@ -192,9 +197,10 @@ BatteryListenerImpl::~BatteryListenerImpl()
                         r.description().c_str());
             }
         }
+        mDone = true;
     }
-    mDone = true;
-    if (NULL !=  mThread) {
+    mCond.notify_all();
+    if (mThread != nullptr && mThread->joinable()) {
         mThread->join();
     }
 }
@@ -210,10 +216,10 @@ void BatteryListenerImpl::serviceDied(uint64_t cookie __unused,
         }
         LOC_LOGi("health service died, reinit");
         mDone = true;
+        mHealth = nullptr;
     }
-    mHealth = NULL;
-    mCond.notify_one();
-    if (NULL !=  mThread) {
+    mCond.notify_all();
+    if (mThread != nullptr && mThread->joinable()) {
         mThread->join();
     }
     std::lock_guard<std::mutex> _l(mLock);
@@ -246,13 +252,26 @@ Return<void> BatteryListenerImpl::healthInfoChanged_2_1(
 static sp<BatteryListenerImpl> batteryListener;
 
 bool batteryPropertiesListenerIsCharging() {
-    return batteryListener->isCharging();
+    sp<BatteryListenerImpl> listener;
+    {
+        std::lock_guard<std::mutex> _l(::sBatteryListenerMutex);
+        listener = batteryListener;
+    }
+    return listener != nullptr && listener->isCharging();
 }
 
-status_t batteryPropertiesListenerInit(BatteryListenerImpl::cb_fn_t cb) {
-    batteryListener = new BatteryListenerImpl(cb);
-    bool isCharging = batteryPropertiesListenerIsCharging();
-    LOC_LOGv("charging status: %s charging", isCharging ? "" : "not");;
+status_t batteryPropertiesListenerInit(BatteryListenerImpl::cb_fn_t cb,
+                                       unsigned int generation) {
+    sp<BatteryListenerImpl> listener = new BatteryListenerImpl(cb);
+    bool isCharging = listener->isCharging();
+    {
+        std::lock_guard<std::mutex> _l(::sBatteryListenerMutex);
+        if (!::sIsBatteryListened || generation != ::sBatteryListenerGeneration) {
+            return NO_INIT;
+        }
+        batteryListener = listener;
+    }
+    LOC_LOGv("charging status: %s charging", isCharging ? "" : "not");
     if (isCharging) {
         cb(isCharging);
     }
@@ -260,7 +279,15 @@ status_t batteryPropertiesListenerInit(BatteryListenerImpl::cb_fn_t cb) {
 }
 
 status_t batteryPropertiesListenerDeinit() {
-    batteryListener.clear();
+    sp<BatteryListenerImpl> listener;
+    {
+        std::lock_guard<std::mutex> _l(::sBatteryListenerMutex);
+        ++::sBatteryListenerGeneration;
+        ::sIsBatteryListened = false;
+        listener = batteryListener;
+        batteryListener.clear();
+    }
+    listener.clear();
     return OK;
 }
 
@@ -268,12 +295,22 @@ status_t batteryPropertiesListenerDeinit() {
 
 void loc_extn_battery_properties_listener_init(battery_status_change_fn_t fn) {
     LOC_LOGv("loc_extn_battery_properties_listener_init entry");
-    if (!sIsBatteryListened) {
-        std::thread t1(android::batteryPropertiesListenerInit,
-                [=](bool charging) { fn(charging); });
-        t1.detach();
-        sIsBatteryListened = true;
+    if (fn == nullptr) {
+        return;
     }
+    unsigned int generation;
+    {
+        std::lock_guard<std::mutex> _l(sBatteryListenerMutex);
+        if (sIsBatteryListened) {
+            return;
+        }
+        sIsBatteryListened = true;
+        generation = ++sBatteryListenerGeneration;
+    }
+    std::thread([fn, generation]() {
+        android::batteryPropertiesListenerInit(
+                [fn](bool charging) { fn(charging); }, generation);
+    }).detach();
 }
 
 void loc_extn_battery_properties_listener_deinit() {
