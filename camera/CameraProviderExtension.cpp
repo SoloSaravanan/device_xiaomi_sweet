@@ -47,9 +47,8 @@ bool supportsSetTorchModeExt() {
 }
 
 int32_t getTorchDefaultStrengthLevelExt() {
-    // Our default value is 75. This corresponds to 15%.
-    // As we have changed the maximum value, 59% now corresponds to 75.
-    return 59;
+    // Start with the highest level exposed to CameraManager.
+    return getTorchMaxStrengthLevelExt();
 }
 
 int32_t getTorchMaxStrengthLevelExt() {
