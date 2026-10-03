@@ -32,12 +32,10 @@ public class AodSensor implements SensorEventListener {
 
     private SensorManager mSensorManager;
     private Sensor mSensor;
-    private Context mContext;
     private ExecutorService mExecutorService;
 
     public AodSensor(Context context) {
-        mContext = context;
-        mSensorManager = mContext.getSystemService(SensorManager.class);
+        mSensorManager = context.getSystemService(SensorManager.class);
         mSensor = DozeUtils.getSensor(mSensorManager, "xiaomi.sensor.aod");
         mExecutorService = Executors.newSingleThreadExecutor();
     }
@@ -66,6 +64,9 @@ public class AodSensor implements SensorEventListener {
         if (DEBUG) {
             Log.d(TAG, "Enabling");
         }
+        if (mSensorManager == null || mSensor == null) {
+            return;
+        }
         submit(() -> {
             mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_NORMAL);
         });
@@ -75,7 +76,9 @@ public class AodSensor implements SensorEventListener {
         if (DEBUG) {
             Log.d(TAG, "Disabling");
         }
-        submit(() -> { mSensorManager.unregisterListener(this, mSensor); });
+        if (mSensorManager != null) {
+            submit(() -> { mSensorManager.unregisterListener(this); });
+        }
     }
 
     protected void close() {

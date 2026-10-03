@@ -75,6 +75,9 @@ public class PickupSensor implements SensorEventListener {
     protected void enable() {
         if (DEBUG)
             Log.d(TAG, "Enabling");
+        if (mSensorManager == null || mSensor == null) {
+            return;
+        }
         submit(() -> {
             mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_NORMAL);
             mEntryTimestamp = SystemClock.elapsedRealtime();
@@ -84,7 +87,9 @@ public class PickupSensor implements SensorEventListener {
     protected void disable() {
         if (DEBUG)
             Log.d(TAG, "Disabling");
-        submit(() -> { mSensorManager.unregisterListener(this, mSensor); });
+        if (mSensorManager != null) {
+            submit(() -> { mSensorManager.unregisterListener(this); });
+        }
     }
 
     protected void close() {
