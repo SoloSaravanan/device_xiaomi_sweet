@@ -27,8 +27,6 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-target=`getprop ro.board.platform`
-
 function configure_memory_parameters() {
     [ -d /sys/module/lowmemorykiller/parameters ] || return 0
     # Set Memory parameters.
