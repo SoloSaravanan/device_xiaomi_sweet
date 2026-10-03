@@ -37,6 +37,7 @@
 /vendor/bin/hw/vendor\.xiaomi\.hardware\.motor@1\.0-service                u:object_r:hal_motor_default_exec:s0
 
 # IR
+/dev/ir_spi                                                           u:object_r:vendor_ir_device:s0
 /dev/spidev[0-9]\.1                                                  u:object_r:lirc_device:s0
 
 # Motor
