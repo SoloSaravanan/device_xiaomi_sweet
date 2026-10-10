@@ -3,3 +3,6 @@ type sysfs_torch, fs_type, sysfs_type;
 
 # Touchpanel
 type sysfs_touchpanel, fs_type, sysfs_type;
+
+# Thermal message sysfs controls used by the source sweet policy daemon.
+type vendor_sysfs_thermal_message, fs_type, sysfs_type;
