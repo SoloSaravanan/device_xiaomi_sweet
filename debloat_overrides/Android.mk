@@ -29,7 +29,6 @@ LOCAL_OVERRIDES_MODULES := \
     BtHelperAdapter \
     EmergencyInfo \
     Updater \
-    AccessibilityMenu \
     OmniJaws \
     Gramophone \
     Jellyfish \
@@ -40,7 +39,5 @@ LOCAL_OVERRIDES_MODULES := \
     Datura \
     FaceUnlock \
     GameSpace \
-    Seedvault \
-    VoltageSetupWizard \
-    SoterService
+    Seedvault
 include $(BUILD_PREBUILT)
