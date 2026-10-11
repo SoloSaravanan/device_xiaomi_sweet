@@ -102,7 +102,6 @@ vendor/lib/liba2dpoffload.so
 vendor/lib/libhdmiedid.so
 vendor/lib/libhfp.so
 vendor/lib/libsndmonitor.so
-vendor/lib/libspkrprot.so
 
 # Awinic firmware
 vendor/firmware/awinic/aw882xx_pid_1852_acf.bin
@@ -920,7 +919,6 @@ vendor/etc/elliptic_sensor.xml
 vendor/lib64/libnotifyaudiohal.so
 vendor/lib64/libultrasound.so
 vendor/lib64/sensors.elliptic.so
-vendor/lib64/sensors.mius.proximity.so
 
 # Time
 vendor/app/TimeService/TimeService.apk
