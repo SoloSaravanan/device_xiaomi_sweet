@@ -1,2 +1,7 @@
 # eBPF
 ro.bpf.kver_override=5.10.239
+
+# Graphics
+debug.hwui.renderer=skiagl 
+renderthread.skia.reduceopstasksplitting=true
+debug.renderengine.backend=skiaglthreaded
