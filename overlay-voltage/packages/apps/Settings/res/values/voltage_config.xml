@@ -4,9 +4,6 @@
      SPDX-License-Identifier: Apache-2.0
 -->
 <resources>
-    <!-- Show battery cycle count -->
-    <bool name="config_show_battery_cycle_count" translatable="false">true</bool>
-
     <!-- 5g only toggle -->
     <bool name="config_supportsVONR">false</bool>
 </resources>

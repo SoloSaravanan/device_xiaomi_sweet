@@ -166,8 +166,6 @@ vendor/lib64/libcamxfdengine.so
 vendor/lib64/libcamxstatscore.so
 vendor/lib64/libcamxswprocessalgo.so
 vendor/lib64/libcamxtintlessalgo.so
-vendor/lib64/libcapiv2svacnn.so
-vendor/lib64/libcapiv2vop.so
 vendor/lib64/libcom.qti.chinodeutils.so
 vendor/lib64/libdualcam_optical_zoom_control.so
 vendor/lib64/libdualcam_video_optical_zoom.so
@@ -680,7 +678,6 @@ vendor/lib64/libqtikeymaster4.so
 # Listen
 vendor/lib/libadpcmdec.so
 vendor/lib/librice.so
-vendor/lib/libsmwrapper.so
 
 # Media
 system_ext/lib64/libmmosal.so
